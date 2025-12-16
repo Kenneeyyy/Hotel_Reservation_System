@@ -14,6 +14,38 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="icon" href="../public/assets/Lunera-Logo.png" type="image/ico">
 
+<style>
+.loyalty-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-block;
+    min-width: 70px;
+    text-align: center;
+}
+
+.loyalty-badge.gold {
+    background: #ffd700;
+    color: #5a4500;
+}
+
+.loyalty-badge.silver {
+    background: #c0c0c0;
+    color: #333;
+}
+
+.loyalty-badge.bronze {
+    background: #cd7f32;
+    color: #fff;
+}
+
+.loyalty-badge.none {
+    background: #eee;
+    color: #777;
+}
+</style>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
@@ -101,6 +133,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                         <th>Check-in Date</th>
                         <th>Check-out Date</th>
                         <th>Past Visit</th>
+                        <th>Loyalty</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,12 +154,35 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                                 </td>
                                 <td><?= $guest['CheckedInAt'] ? date('M d, Y h:i A', strtotime($guest['CheckedInAt'])) : 'N/A' ?></td>
                                 <td><?= $guest['CheckedOutAt'] ? date('M d, Y h:i A', strtotime($guest['CheckedOutAt'])) : 'N/A' ?></td>
-                                <td><?= htmlspecialchars($guest['Past Visit'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($guest['Past Visit'] ?? 0) ?></td>
+
+                                <td>
+                                    <?php
+                                        $visits = (int)($guest['Past Visit'] ?? 0);
+
+                                        if ($visits >= 9) {
+                                            $loyalty = 'Gold';
+                                            $class = 'gold';
+                                        } elseif ($visits >= 4) {
+                                            $loyalty = 'Silver';
+                                            $class = 'silver';
+                                        } elseif ($visits >= 3) {
+                                            $loyalty = 'Bronze';
+                                            $class = 'bronze';
+                                        } else {
+                                            $loyalty = 'None';
+                                            $class = 'none';
+                                        }
+                                    ?>
+                                    <span class="loyalty-badge <?= $class ?>">
+                                        <?= $loyalty ?>
+                                    </span>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" style="text-align:center; padding:40px; color:#999;">
+                            <td colspan="9" style="text-align:center; padding:40px; color:#999;">
                                 No guest history found.
                             </td>
                         </tr>
@@ -134,12 +190,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                 </tbody>
             </table>
 
-            <!-- Pagination -->
             <?php if (isset($totalPages) && $totalPages > 1): ?>
                 <div class="pagination">
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                         <a href="?controller=admin&action=guestHistory&page=<?= $i ?>"
-                            class="<?= ($i === ($page ?? 1)) ? 'active' : '' ?>">
+                           class="<?= ($i === ($page ?? 1)) ? 'active' : '' ?>">
                             <?= $i ?>
                         </a>
                     <?php endfor; ?>
